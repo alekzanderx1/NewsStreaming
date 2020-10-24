@@ -8,6 +8,8 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
+import org.apache.http.HttpResponse
+
 class APIReceiver(url: String) extends Receiver[String](StorageLevel.MEMORY_AND_DISK_2) with Logging
 {
   def onStart() {
@@ -17,17 +19,19 @@ class APIReceiver(url: String) extends Receiver[String](StorageLevel.MEMORY_AND_
     }.start()
   }
 
-  //This methods is used to fetch and store the data using the provided API and security key
+  /** This methods is used to fetch and store the data using the provided API and security key */
   def receive() {
     try {
       val get = new HttpGet(url)
       val httpclient = new DefaultHttpClient
-      //TODO: add a method to check if loop can be exit-ed
+      var response : HttpResponse = null
+      var br : BufferedReader = null
+      //Calls the specified GET API every 12th second and stores the data
       while(true) {
-        val response = httpclient.execute(get)
-        val br = new BufferedReader(new InputStreamReader(response.getEntity.getContent))
+        response = httpclient.execute(get)
+        br = new BufferedReader(new InputStreamReader(response.getEntity.getContent))
         store(br.readLine)
-        Thread.sleep(6000)
+        Thread.sleep(12000)
       }
     } catch {
       case e: ClientProtocolException =>

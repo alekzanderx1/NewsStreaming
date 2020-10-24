@@ -1,47 +1,50 @@
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import Utilities._
-import com.google.gson.JsonParser
-
-import scala.collection.mutable
+import org.apache.spark.SparkConf
 
 object NewsStreaming {
 
+  val defaultCheckpointDir = "C:/checkpoint/";
+  val defaultBatchSize = "6"
+
   def main(args: Array[String]): Unit = {
 
-    if (args.length < 1) {
-      System.err.println("Usage:<api_url>")
-      System.exit(1)
-    }
-    val ssc = new StreamingContext("local[*]", "NewsStreaming", Seconds(6))
+    var finalApiUrl = args(0)
+
+    //Very specific to currentsapi, where key is specified as apiKey in query parameters
+    if(args(1) != null)
+      finalApiUrl = finalApiUrl + "&apiKey=" + args(1)
+
+    //Get existing streaming context from checkpoint or create a new one as specified in
+    //getStreamingContext method
+    val ssc = StreamingContext.getOrCreate(defaultCheckpointDir, getStreamingContext)
+
     setupLogging()
 
-    val customReceiverStream = ssc.receiverStream(new APIReceiver(args(0)))
+    //Initialize the API receiver
+    val customReceiverStream = ssc.receiverStream(new APIReceiver(finalApiUrl))
 
-    val keywords = customReceiverStream.flatMap(it => parseJSON(it))
+    //parse JSON to get keywords from the news description as DStream of String
+    val keywords = customReceiverStream.flatMap(it => parseCurrentsAPIJSON(it))
 
-    val keywordsByCount = keywords.map(x => (x,1)).reduceByKeyAndWindow(_ + _, _ - _, Seconds(300), Seconds(6))
+    //compute map of keyword to the count of number of times it has been used in the last 5 minutes(windowSize)
+    //this is computed every 12th second(slideDuration) as APIReceiver polls every 12th second
+    val keywordsByCount = keywords.map(x => (x,1)).reduceByKeyAndWindow(_ + _, _ - _, Seconds(300), Seconds(12))
 
+    //Sort keywords in descending order by count
     val sortedResults = keywordsByCount.transform(rdd => rdd.sortBy(x => x._2, false))
 
-    sortedResults.print()
+    //print the top 20 keywords in the last 5 minutes
+    sortedResults.map(_._1).print(20)
 
-    //Todo: Make configurable
-    ssc.checkpoint("C:/checkpoint/")
     ssc.start()
     ssc.awaitTermination()
-
   }
 
-  def parseJSON(string: String): Stream[String] = {
-    System.out.println("JSON string to parse is: " + string)
-    val result  = mutable.HashSet[String]()
-    val parser = new JsonParser()
-    val jsonObject = parser.parse(string).getAsJsonObject
-    val results = jsonObject.get("results").getAsJsonArray
-    results.forEach( news => {
-      val newsJson = news.getAsJsonObject
-      newsJson.get("adx_keywords").getAsString.split(";").filter(!_.isEmpty).foreach(keyword => result.add(keyword))
-    })
-    result.toStream
+  def getStreamingContext() : StreamingContext = {
+    val sc = new SparkConf().setAppName("NewsStreaming")
+    val ssc =  new StreamingContext(sc, Seconds(6))
+    ssc.checkpoint(defaultCheckpointDir)
+    ssc
   }
 }
