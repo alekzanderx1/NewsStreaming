@@ -7,15 +7,15 @@ import scala.collection.mutable
 
 object Utilities {
   /** Makes sure only ERROR messages get logged to avoid log spam. */
-  def setupLogging() = {
+  def setupLogging() {
     import org.apache.log4j.{Level, Logger}
-    val rootLogger = Logger.getRootLogger()
+    val rootLogger = Logger.getRootLogger
     rootLogger.setLevel(Level.ERROR)
   }
 
   /** Unused, this can parse the response of popular articles from NY Times API
       But that did not fit well with streaming application due to window of 1 day*/
-  def parseNYUJSON(string: String): mutable.Buffer[String] = {
+  def parseNYTimesJSON(string: String): mutable.Buffer[String] = {
     val result  = new util.ArrayList[String]
     val parser = new JsonParser()
     val jsonObject = parser.parse(string).getAsJsonObject
