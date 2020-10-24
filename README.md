@@ -1,4 +1,4 @@
-#Spark Streaming app to analyse latest and most popular news keywords
+# Spark Streaming app to analyse latest and most popular news keywords
 This uses Developer API provided by https://currentsapi.services/en to get latest news and parse their descriptions to find important and trending keywords in a constantly updating 5 minute window.
 
 There is a limit to number of times the API can be called in a Minute and also in a Day, hence the Custom API Receiver has been set to Poll every 12th second. 
