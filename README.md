@@ -8,7 +8,7 @@ Steps to launch:
 2. Import into IntelliJ using as SBT project
 3. Build JAR using 'package' command in sbt shell
 4. Register for a key at https://currentsapi.services/en 
-5. Goto target/<yourSparkVersion> 
+5. Goto target/yourSparkVersion 
 6. Using the currentsAPI Key, launch spark app using the following command(in local mode)
 
     `spark-submit --master local[*] --class "NewsStreaming" newstrendstreaming_2.12-1.0.jar https://api.currentsapi.services/v1/latest-news?language=en YourApiKey`
