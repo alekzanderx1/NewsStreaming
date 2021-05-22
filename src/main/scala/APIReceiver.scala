@@ -27,12 +27,14 @@ class APIReceiver(url: String) extends Receiver[String](StorageLevel.MEMORY_AND_
       var response : HttpResponse = null
       var br : BufferedReader = null
       //Calls the specified GET API every 12th second and stores the data
-      while(true) {
+      while(!isStopped) {
         response = httpclient.execute(get)
         br = new BufferedReader(new InputStreamReader(response.getEntity.getContent))
         store(br.readLine)
         Thread.sleep(12000)
       }
+      br.close()
+      println("Stopped receiving")
     } catch {
       case e: ClientProtocolException =>
         e.printStackTrace()

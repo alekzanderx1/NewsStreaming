@@ -28,8 +28,8 @@ object NewsStreaming {
     val keywords = customReceiverStream.flatMap(it => parseCurrentsAPIJSON(it))
 
     //compute map of keyword to the count of number of times it has been used in the last 5 minutes(windowSize)
-    //this is computed every 12th second(slideDuration) as APIReceiver polls every 12th second
-    val keywordsByCount = keywords.map(x => (x,1)).reduceByKeyAndWindow(_ + _, _ - _, Seconds(300), Seconds(12))
+    //this is computed every 13th second(slideDuration) as APIReceiver polls every 12th second
+    val keywordsByCount = keywords.map(x => (x,1)).reduceByKeyAndWindow(_ + _, _ - _, Seconds(300), Seconds(13))
 
     //Sort keywords in descending order by count
     val sortedResults = keywordsByCount.transform(rdd => rdd.sortBy(x => x._2, false))
