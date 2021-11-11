@@ -5,7 +5,7 @@ There is a limit to number of times the API can be called in a Minute and also i
 
 Steps to launch:
 1. Clone project into local repository 
-2. Import into IntelliJ using as SBT project
+2. Import into IntelliJ or IDE of your choice as a SBT project
 3. Build JAR using 'package' command in sbt shell
 4. Register for a key at https://currentsapi.services/en 
 5. Goto target/yourSparkVersion 
